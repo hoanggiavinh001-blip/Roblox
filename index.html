@@ -2,8 +2,8 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Roblox-Style Game HTML5</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
+    <title>3D Roblox-Style Game Ultimate Edition</title>
     <style>
         * {
             box-sizing: border-box;
@@ -11,337 +11,787 @@
             -webkit-user-select: none;
             margin: 0;
             padding: 0;
+            touch-action: none;
         }
         body, html {
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #87CEEB;
-            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         #game-container {
             width: 100%;
             height: 100%;
             display: block;
         }
-        /* UI Overlay */
-        #joystick-zone {
+        
+        /* UI OVERLAY */
+        #ui-layer {
             position: absolute;
-            bottom: 30px;
-            left: 30px;
-            width: 120px;
-            height: 120px;
-            z-index: 10;
-        }
-        #jump-btn {
-            position: absolute;
-            bottom: 40px;
-            right: 40px;
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.4);
-            border: 3px solid rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            touch-action: manipulation;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        #jump-btn:active {
-            background: rgba(255, 255, 255, 0.7);
-            transform: scale(0.95);
-        }
-        #instructions {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            background: rgba(0,0,0,0.5);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
             z-index: 10;
         }
+
+        #joystick-zone {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            width: 140px;
+            height: 140px;
+            pointer-events: auto;
+        }
+
+        #jump-btn {
+            position: absolute;
+            bottom: 50px;
+            right: 50px;
+            width: 85px;
+            height: 85px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 3px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s ease, background 0.1s ease;
+        }
+
+        #jump-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.92);
+        }
+
+        #instructions {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+
+        #stats-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #00ffcc;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            border: 1px solid rgba(0, 255, 204, 0.3);
+        }
+
+        /* LOADING SCREEN */
+        #loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0d1117;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            color: white;
+            transition: opacity 0.5s ease;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.1);
+            border-top-color: #00a8ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
-    <!-- Three.js Library -->
+
+    <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- GLTFLoader -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <!-- NippleJS (Joystick) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
 </head>
 <body>
 
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <h2>Đang tải Roblox World 3D...</h2>
+        <p style="margin-top: 10px; color: #888;">Đang sửa lỗi vị trí chân & mượt hóa camera</p>
+    </div>
+
     <div id="game-container"></div>
-    <div id="joystick-zone"></div>
-    <div id="jump-btn">NHẢY</div>
-    <div id="instructions">
-        🕹️ Cần điều khiển góc trái để di chuyển<br>
-        🖐️ Vuốt màn hình (phải) để xoay Camera<br>
-        🦘 Bấm nút NHẢY để vừa đi vừa nhảy
+
+    <div id="ui-layer">
+        <div id="joystick-zone"></div>
+        <div id="jump-btn">NHẢY</div>
+        <div id="instructions">
+            🕹️ <b>Cần trái:</b> Di chuyển nhân vật<br>
+            🖐️ <b>Vuốt phải:</b> Xoay Camera mượt 360°<br>
+            🦘 <b>Nút NHẢY:</b> Nhảy lên không trung
+        </div>
+        <div id="stats-panel">
+            FPS: <span id="fps-counter">60</span><br>
+            POS: <span id="pos-counter">X: 0, Z: 0</span>
+        </div>
     </div>
 
     <script>
-        // --- 1. SETUP SCENE, CAMERA, RENDERER ---
+        // ==========================================
+        // 1. SYSTEM INITIALIZATION & GLOBALS
+        // ==========================================
         const container = document.getElementById('game-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB); // Bầu trời xanh
-        scene.fog = new THREE.FogExp2(0x87CEEB, 0.005);
+        const loadingScreen = document.getElementById('loading-screen');
+        const fpsCounter = document.getElementById('fps-counter');
+        const posCounter = document.getElementById('pos-counter');
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        container.appendChild(renderer.domElement);
+        let scene, camera, renderer, clock;
+        let playerGroup, playerMeshGroup, playerBodyParts = {};
+        let isGrounded = true;
+        let velocityY = 0;
+        const gravity = -32.0;
+        const jumpForce = 13.5;
+        const moveSpeed = 12.0;
 
-        // --- 2. LIGHTING ---
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
+        // Camera Smooth Angles & Interpolation Variables
+        let cameraTargetAngleX = 0;
+        let cameraTargetAngleY = 0.35;
+        let cameraCurrentAngleX = 0;
+        let cameraCurrentAngleY = 0.35;
+        const cameraDistance = 14.0;
+        const cameraDamping = 0.08; // Hệ số làm mượt xoay Camera (Lerp)
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(50, 100, 50);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
-        dirLight.shadow.camera.near = 0.5;
-        dirLight.shadow.camera.far = 500;
-        const d = 100;
-        dirLight.shadow.camera.left = -d;
-        dirLight.shadow.camera.right = d;
-        dirLight.shadow.camera.top = d;
-        dirLight.shadow.camera.bottom = -d;
-        scene.add(dirLight);
+        // Movement Control Data
+        let joystickVector = { x: 0, y: 0 };
+        let isRightTouchActive = false;
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+        let activeTouchId = null;
 
-        // --- 3. BÃI CỎ VÔ TẬN (GRASS MAP) ---
-        const grassTexture = createGrassTexture();
-        grassTexture.wrapS = THREE.RepeatWrapping;
-        grassTexture.wrapT = THREE.RepeatWrapping;
-        grassTexture.repeat.set(200, 200);
+        // Animation state variables
+        let animTime = 0;
+        let isMoving = false;
 
-        const groundGeo = new THREE.PlaneGeometry(2000, 2000);
-        const groundMat = new THREE.MeshStandardMaterial({ map: grassTexture, roughness: 0.8 });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
+        // ==========================================
+        // 2. THREE.JS SCENE SETUP
+        // ==========================================
+        function initEngine() {
+            clock = new THREE.Clock();
 
-        function createGrassTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#4CAF50';
-            ctx.fillRect(0, 0, 256, 256);
-            ctx.fillStyle = '#45a049';
-            for (let i = 0; i < 1000; i++) {
-                ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
-            }
-            return new THREE.CanvasTexture(canvas);
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x7ec0ee); // Sky blue
+            scene.fog = new THREE.FogExp2(0x7ec0ee, 0.0035);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            container.appendChild(renderer.domElement);
+
+            setupLighting();
+            createEnvironment();
+            createPlayer();
+            setupControls();
+
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Remove loading screen
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => loadingScreen.style.display = 'none', 500);
+            }, 800);
         }
 
-        // --- 4. PLAYER & HOUSE CREATION (WITH GLTF FALLBACK) ---
-        let player = new THREE.Group();
-        scene.add(player);
-        player.position.set(0, 0, 15);
+        // ==========================================
+        // 3. LIGHTING SYSTEM
+        // ==========================================
+        function setupLighting() {
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
+            scene.add(ambientLight);
 
-        const loader = new THREE.GLTFLoader();
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.35);
+            hemiLight.position.set(0, 200, 0);
+            scene.add(hemiLight);
 
-        // Load Model Nhân Vật (roblox-noob.glb) hoặc tạo khối đỏ Roblox
-        loader.load('roblox-noob.glb', (gltf) => {
-            const model = gltf.scene;
-            model.scale.set(1.5, 1.5, 1.5);
-            model.traverse(c => { if(c.isMesh) c.castShadow = true; });
-            player.add(model);
-        }, undefined, () => {
-            // Fallback: Khối đỏ có kích thước chuẩn character Roblox (Rộng 2, Cao 4, Sâu 1)
-            const redBoxGeo = new THREE.BoxGeometry(2, 4, 1);
-            const redBoxMat = new THREE.MeshStandardMaterial({ color: 0xff0000, roughness: 0.3 });
-            const redBox = new THREE.Mesh(redBoxGeo, redBoxMat);
-            redBox.position.y = 2; // Nâng tâm lên để chân chạm đất
-            redBox.castShadow = true;
-            player.add(redBox);
-        });
-
-        // Load Model Ngôi Nhà (classic-roblox-house.glb) hoặc dựng nhà bằng code
-        loader.load('classic-roblox-house.glb', (gltf) => {
-            const houseModel = gltf.scene;
-            houseModel.position.set(0, 0, 0);
-            houseModel.traverse(c => { 
-                if(c.isMesh) {
-                    c.castShadow = true;
-                    c.receiveShadow = true;
-                }
-            });
-            scene.add(houseModel);
-        }, undefined, () => {
-            // Fallback: Dựng nhà cổ điển phong cách Roblox bằng code
-            const houseGroup = new THREE.Group();
+            const sunLight = new THREE.DirectionalLight(0xffffff, 0.85);
+            sunLight.position.set(80, 150, 60);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 0.5;
+            sunLight.shadow.camera.far = 400;
             
-            // Tường nhà
-            const wallsGeo = new THREE.BoxGeometry(12, 8, 10);
-            const wallsMat = new THREE.MeshStandardMaterial({ color: 0xA0522D }); // Màu gạch
-            const walls = new THREE.Mesh(wallsGeo, wallsMat);
-            walls.position.y = 4;
-            walls.castShadow = true;
-            walls.receiveShadow = true;
-            houseGroup.add(walls);
+            const shadowRange = 80;
+            sunLight.shadow.camera.left = -shadowRange;
+            sunLight.shadow.camera.right = shadowRange;
+            sunLight.shadow.camera.top = shadowRange;
+            sunLight.shadow.camera.bottom = -shadowRange;
+            sunLight.shadow.bias = -0.0005;
+            
+            scene.add(sunLight);
+        }
 
-            // Mái nhà
-            const roofGeo = new THREE.ConeGeometry(9, 5, 4);
-            const roofMat = new THREE.MeshStandardMaterial({ color: 0x8B0000 });
+        // ==========================================
+        // 4. ENVIRONMENT & WORLD BUILDER
+        // ==========================================
+        function createGrassTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(0, 0, 512, 512);
+
+            // Add procedural grass pattern noise
+            for (let i = 0; i < 20000; i++) {
+                const x = Math.random() * 512;
+                const y = Math.random() * 512;
+                const shade = Math.random() > 0.5 ? '#43A047' : '#388E3C';
+                ctx.fillStyle = shade;
+                ctx.fillRect(x, y, 2, 2);
+            }
+
+            // Grid lines to look like Roblox Studio Baseplate
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.lineWidth = 4;
+            for (let i = 0; i <= 512; i += 64) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0); ctx.lineTo(i, 512);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i); ctx.lineTo(512, i);
+                ctx.stroke();
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(200, 200);
+            return texture;
+        }
+
+        function createEnvironment() {
+            // Endless Ground Baseplate
+            const groundGeo = new THREE.PlaneGeometry(2000, 2000);
+            const groundMat = new THREE.MeshStandardMaterial({
+                map: createGrassTexture(),
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = 0;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Attempt to load user's GLTF house or fallback to procedural Roblox House
+            const loader = new THREE.GLTFLoader();
+            loader.load('classic-roblox-house.glb', 
+                (gltf) => {
+                    const houseModel = gltf.scene;
+                    houseModel.position.set(0, 0, -10);
+                    houseModel.traverse(child => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+                    scene.add(houseModel);
+                },
+                undefined,
+                () => { buildProceduralRobloxHouse(); }
+            );
+
+            // Add Decorative Roblox Environment Props
+            buildTreesAndProps();
+        }
+
+        function buildProceduralRobloxHouse() {
+            const houseGroup = new THREE.Group();
+            houseGroup.position.set(0, 0, -10);
+
+            // Base Floor Plate
+            const baseGeo = new THREE.BoxGeometry(22, 0.6, 20);
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
+            const base = new THREE.Mesh(baseGeo, baseMat);
+            base.position.y = 0.3;
+            base.receiveShadow = true;
+            houseGroup.add(base);
+
+            // Walls
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xA0522D, roughness: 0.6 });
+            
+            const backWall = new THREE.Mesh(new THREE.BoxGeometry(20, 10, 0.8), wallMat);
+            backWall.position.set(0, 5.3, -9.5);
+            backWall.castShadow = true; backWall.receiveShadow = true;
+            houseGroup.add(backWall);
+
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.8, 10, 19.8), wallMat);
+            leftWall.position.set(-9.6, 5.3, 0.1);
+            leftWall.castShadow = true; leftWall.receiveShadow = true;
+            houseGroup.add(leftWall);
+
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.8, 10, 19.8), wallMat);
+            rightWall.position.set(9.6, 5.3, 0.1);
+            rightWall.castShadow = true; rightWall.receiveShadow = true;
+            houseGroup.add(rightWall);
+
+            // Front Left Wall
+            const frontWallL = new THREE.Mesh(new THREE.BoxGeometry(7, 10, 0.8), wallMat);
+            frontWallL.position.set(-6, 5.3, 9.5);
+            frontWallL.castShadow = true; frontWallL.receiveShadow = true;
+            houseGroup.add(frontWallL);
+
+            // Front Right Wall
+            const frontWallR = new THREE.Mesh(new THREE.BoxGeometry(7, 10, 0.8), wallMat);
+            frontWallR.position.set(6, 5.3, 9.5);
+            frontWallR.castShadow = true; frontWallR.receiveShadow = true;
+            houseGroup.add(frontWallR);
+
+            // Door Frame Top
+            const doorTop = new THREE.Mesh(new THREE.BoxGeometry(5, 3, 0.8), wallMat);
+            doorTop.position.set(0, 8.8, 9.5);
+            doorTop.castShadow = true;
+            houseGroup.add(doorTop);
+
+            // Roof
+            const roofGeo = new THREE.ConeGeometry(16, 7, 4);
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.4 });
             const roof = new THREE.Mesh(roofGeo, roofMat);
-            roof.position.y = 10.5;
+            roof.position.set(0, 13.8, 0);
             roof.rotation.y = Math.PI / 4;
             roof.castShadow = true;
             houseGroup.add(roof);
 
-            // Cửa ra vào
-            const doorGeo = new THREE.BoxGeometry(2.5, 5, 0.2);
-            const doorMat = new THREE.MeshStandardMaterial({ color: 0x4A2511 });
-            const door = new THREE.Mesh(doorGeo, doorMat);
-            door.position.set(0, 2.5, 5.01);
-            houseGroup.add(door);
-
             scene.add(houseGroup);
-        });
+        }
 
-        // --- 5. CONTROLS (JOYSTICK, CAMERA & JUMP) ---
-        let moveData = { x: 0, y: 0 };
-        
-        // Cấu hình NippleJS Joystick
-        const joystick = nipplejs.create({
-            zone: document.getElementById('joystick-zone'),
-            mode: 'static',
-            position: { left: '60px', bottom: '60px' },
-            color: 'white',
-            size: 100
-        });
+        function buildTreesAndProps() {
+            // Blocky Roblox Trees
+            const treePositions = [
+                {x: -25, z: 15}, {x: -30, z: -20}, {x: 25, z: 20}, {x: 35, z: -15},
+                {x: -15, z: 35}, {x: 18, z: -35}, {x: -40, z: 0}, {x: 40, z: 5}
+            ];
 
-        joystick.on('move', (evt, data) => {
-            if (data.vector) {
-                moveData.x = data.vector.x;
-                moveData.y = data.vector.y;
-            }
-        });
+            const trunkGeo = new THREE.BoxGeometry(2, 8, 2);
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
+            const leavesGeo = new THREE.BoxGeometry(7, 7, 7);
+            const leavesMat = new THREE.MeshStandardMaterial({ color: 0x2e8b57 });
 
-        joystick.on('end', () => {
-            moveData.x = 0;
-            moveData.y = 0;
-        });
+            treePositions.forEach(pos => {
+                const treeGroup = new THREE.Group();
+                treeGroup.position.set(pos.x, 0, pos.z);
 
-        // Xoay Camera Góc Nhìn Thứ 3 quanh nhân vật bằng cách vuốt màn hình
-        let cameraAngleX = 0;
-        let cameraAngleY = 0.3; // Góc nghiêng ban đầu
-        const cameraDistance = 15;
+                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                trunk.position.y = 4;
+                trunk.castShadow = true;
+                trunk.receiveShadow = true;
+                treeGroup.add(trunk);
 
-        let isTouching = false;
-        let previousTouchX = 0;
-        let previousTouchY = 0;
+                const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+                leaves.position.y = 9.5;
+                leaves.castShadow = true;
+                leaves.receiveShadow = true;
+                treeGroup.add(leaves);
 
-        window.addEventListener('pointerdown', (e) => {
-            // Chỉ xoay camera khi chạm ở nửa bên phải màn hình
-            if (e.clientX > window.innerWidth / 2) {
-                isTouching = true;
-                previousTouchX = e.clientX;
-                previousTouchY = e.clientY;
-            }
-        });
+                scene.add(treeGroup);
+            });
 
-        window.addEventListener('pointermove', (e) => {
-            if (!isTouching) return;
-            const deltaX = e.clientX - previousTouchX;
-            const deltaY = e.clientY - previousTouchY;
+            // Add Spawn Location Plate
+            const spawnGeo = new THREE.CylinderGeometry(4, 4, 0.4, 16);
+            const spawnMat = new THREE.MeshStandardMaterial({ color: 0x00a8ff, roughness: 0.2 });
+            const spawnPlate = new THREE.Mesh(spawnGeo, spawnMat);
+            spawnPlate.position.set(0, 0.2, 15);
+            spawnPlate.receiveShadow = true;
+            scene.add(spawnPlate);
+        }
 
-            cameraAngleX -= deltaX * 0.005;
-            cameraAngleY += deltaY * 0.005;
+        // ==========================================
+        // 5. PLAYER CREATION & SINK FIX (SỬA LỖI LÚN BÂN CHÂN)
+        // ==========================================
+        function createPlayer() {
+            playerGroup = new THREE.Group();
+            playerGroup.position.set(0, 0, 15); // Start at Spawn Plate
+            scene.add(playerGroup);
 
-            // Giới hạn góc nhìn dọc (không bị lật ngược)
-            cameraAngleY = Math.max(0.1, Math.min(Math.PI / 2.2, cameraAngleY));
+            playerMeshGroup = new THREE.Group();
+            playerGroup.add(playerMeshGroup);
 
-            previousTouchX = e.clientX;
-            previousTouchY = e.clientY;
-        });
+            // Attempt to load GLTF Noob
+            const loader = new THREE.GLTFLoader();
+            loader.load('roblox-noob.glb',
+                (gltf) => {
+                    const model = gltf.scene;
+                    model.scale.set(1.5, 1.5, 1.5);
+                    
+                    // --- SỬA LỖI LÚN CHÂN VỚI MODEL GLTF ---
+                    // Tính BoundingBox để đưa đáy chân chính xác về Y = 0
+                    const box = new THREE.Box3().setFromObject(model);
+                    const minY = box.min.y;
+                    model.position.y = -minY; // Nâng tâm model lên sao cho đáy chân chạm mốc Y = 0
 
-        window.addEventListener('pointerup', () => { isTouching = false; });
+                    model.traverse(child => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+                    playerMeshGroup.add(model);
+                },
+                undefined,
+                () => {
+                    // FALLBACK: Tự dựng Nhân Vật Roblox chuẩn tỷ lệ bằng Code
+                    buildProceduralRobloxNoob();
+                }
+            );
+        }
 
-        // Cơ chế Nhảy & Trọng lực
-        let velocityY = 0;
-        const gravity = -30;
-        const jumpForce = 12;
-        let isGrounded = true;
+        function buildProceduralRobloxNoob() {
+            // Tỷ lệ chuẩn Character Roblox:
+            // Leg: 1x2x1 | Torso: 2x2x1 | Head: 1.2x1.2x1.2 | Arm: 1x2x1
+            // Tổng chiều cao = 5 units.
+            // BẮT BUỘC ĐÁY CHÂN PHẢI BẮT ĐẦU TỪ Y = 0 ĐỂ KHÔNG BỊ LÚN ĐẤT.
 
-        const jumpBtn = document.getElementById('jump-btn');
-        function triggerJump() {
-            if (isGrounded) {
-                velocityY = jumpForce;
-                isGrounded = false;
+            const yellowMat = new THREE.MeshStandardMaterial({ color: 0xFFE042, roughness: 0.4 });
+            const blueMat   = new THREE.MeshStandardMaterial({ color: 0x0000FF, roughness: 0.4 });
+            const greenMat  = new THREE.MeshStandardMaterial({ color: 0x00FF00, roughness: 0.4 });
+
+            // 1. Chân Trái (Left Leg)
+            const leftLegGeo = new THREE.BoxGeometry(0.9, 2.0, 1.0);
+            leftLegGeo.translate(0, -1.0, 0); // Đặt Khớp Xoay (Pivot) ở hông
+            const leftLeg = new THREE.Mesh(leftLegGeo, greenMat);
+            leftLeg.position.set(-0.5, 2.0, 0); // Vị trí hông
+            leftLeg.castShadow = true;
+            playerMeshGroup.add(leftLeg);
+            playerBodyParts.leftLeg = leftLeg;
+
+            // 2. Chân Phải (Right Leg)
+            const rightLegGeo = new THREE.BoxGeometry(0.9, 2.0, 1.0);
+            rightLegGeo.translate(0, -1.0, 0);
+            const rightLeg = new THREE.Mesh(rightLegGeo, greenMat);
+            rightLeg.position.set(0.5, 2.0, 0);
+            rightLeg.castShadow = true;
+            playerMeshGroup.add(rightLeg);
+            playerBodyParts.rightLeg = rightLeg;
+
+            // 3. Thân Dưới/Trên (Torso)
+            const torsoGeo = new THREE.BoxGeometry(2.0, 2.0, 1.0);
+            const torso = new THREE.Mesh(torsoGeo, blueMat);
+            torso.position.set(0, 3.0, 0); // Nằm ngay trên chân
+            torso.castShadow = true;
+            playerMeshGroup.add(torso);
+            playerBodyParts.torso = torso;
+
+            // 4. Tay Trái (Left Arm)
+            const leftArmGeo = new THREE.BoxGeometry(0.9, 2.0, 1.0);
+            leftArmGeo.translate(0, -1.0, 0); // Pivot ở vai
+            const leftArm = new THREE.Mesh(leftArmGeo, yellowMat);
+            leftArm.position.set(-1.5, 4.0, 0);
+            leftArm.castShadow = true;
+            playerMeshGroup.add(leftArm);
+            playerBodyParts.leftArm = leftArm;
+
+            // 5. Tay Phải (Right Arm)
+            const rightArmGeo = new THREE.BoxGeometry(0.9, 2.0, 1.0);
+            rightArmGeo.translate(0, -1.0, 0);
+            const rightArm = new THREE.Mesh(rightArmGeo, yellowMat);
+            rightArm.position.set(1.5, 4.0, 0);
+            rightArm.castShadow = true;
+            playerMeshGroup.add(rightArm);
+            playerBodyParts.rightArm = rightArm;
+
+            // 6. Đầu (Head)
+            const headGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+            const head = new THREE.Mesh(headGeo, yellowMat);
+            head.position.set(0, 4.6, 0);
+            head.castShadow = true;
+            playerMeshGroup.add(head);
+            playerBodyParts.head = head;
+
+            // Mắt và Miệng Roblox Noob
+            const faceMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const eyeGeo = new THREE.BoxGeometry(0.18, 0.25, 0.05);
+            
+            const leftEye = new THREE.Mesh(eyeGeo, faceMat);
+            leftEye.position.set(-0.25, 4.7, 0.61);
+            playerMeshGroup.add(leftEye);
+
+            const rightEye = new THREE.Mesh(eyeGeo, faceMat);
+            rightEye.position.set(0.25, 4.7, 0.61);
+            playerMeshGroup.add(rightEye);
+
+            const mouthGeo = new THREE.BoxGeometry(0.5, 0.12, 0.05);
+            const mouth = new THREE.Mesh(mouthGeo, faceMat);
+            mouth.position.set(0, 4.35, 0.61);
+            playerMeshGroup.add(mouth);
+        }
+
+        // ==========================================
+        // 6. CONTROLS, TOUCH & CAMERA ROTATION SMOOTHING
+        // ==========================================
+        function setupControls() {
+            // NippleJS Virtual Joystick Setup
+            const joystick = nipplejs.create({
+                zone: document.getElementById('joystick-zone'),
+                mode: 'static',
+                position: { left: '70px', bottom: '70px' },
+                color: 'white',
+                size: 110
+            });
+
+            joystick.on('move', (evt, data) => {
+                if (data.vector) {
+                    joystickVector.x = data.vector.x;
+                    joystickVector.y = data.vector.y;
+                    isMoving = true;
+                }
+            });
+
+            joystick.on('end', () => {
+                joystickVector.x = 0;
+                joystickVector.y = 0;
+                isMoving = false;
+            });
+
+            // Touch Dragging cho Camera - SỬA LỖI KHỰNG CAMERA BẰNG LERP
+            window.addEventListener('touchstart', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    // Chỉ kích hoạt xoay camera khi chạm vào ½ bên phải màn hình
+                    if (touch.clientX > window.innerWidth / 2 && activeTouchId === null) {
+                        activeTouchId = touch.identifier;
+                        isRightTouchActive = true;
+                        lastTouchX = touch.clientX;
+                        lastTouchY = touch.clientY;
+                    }
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!isRightTouchActive) return;
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.identifier === activeTouchId) {
+                        const deltaX = touch.clientX - lastTouchX;
+                        const deltaY = touch.clientY - lastTouchY;
+
+                        // Cập nhật Target Angle thay vì cập nhật trực tiếp Angle để tạo độ mượt
+                        cameraTargetAngleX -= deltaX * 0.006;
+                        cameraTargetAngleY += deltaY * 0.006;
+
+                        // Giới hạn góc ngước / cúi của camera
+                        cameraTargetAngleY = Math.max(0.08, Math.min(Math.PI / 2.1, cameraTargetAngleY));
+
+                        lastTouchX = touch.clientX;
+                        lastTouchY = touch.clientY;
+                    }
+                }
+            }, { passive: false });
+
+            const resetTouch = (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === activeTouchId) {
+                        isRightTouchActive = false;
+                        activeTouchId = null;
+                    }
+                }
+            };
+
+            window.addEventListener('touchend', resetTouch);
+            window.addEventListener('touchcancel', resetTouch);
+
+            // Mouse Drag Backup for PC testing
+            let isMouseDown = false;
+            window.addEventListener('mousedown', (e) => {
+                if (e.clientX > window.innerWidth / 2) {
+                    isMouseDown = true;
+                    lastTouchX = e.clientX;
+                    lastTouchY = e.clientY;
+                }
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (!isMouseDown) return;
+                const deltaX = e.clientX - lastTouchX;
+                const deltaY = e.clientY - lastTouchY;
+
+                cameraTargetAngleX -= deltaX * 0.005;
+                cameraTargetAngleY += deltaY * 0.005;
+                cameraTargetAngleY = Math.max(0.08, Math.min(Math.PI / 2.1, cameraTargetAngleY));
+
+                lastTouchX = e.clientX;
+                lastTouchY = e.clientY;
+            });
+            window.addEventListener('mouseup', () => isMouseDown = false);
+
+            // Jump Button Event Listener
+            const jumpBtn = document.getElementById('jump-btn');
+            const performJump = (e) => {
+                if (e) e.preventDefault();
+                if (isGrounded) {
+                    velocityY = jumpForce;
+                    isGrounded = false;
+                }
+            };
+            jumpBtn.addEventListener('touchstart', performJump, { passive: false });
+            jumpBtn.addEventListener('mousedown', performJump);
+        }
+
+        // ==========================================
+        // 7. CHARACTER ANIMATION SYSTEM
+        // ==========================================
+        function updatePlayerAnimation(delta) {
+            if (!playerBodyParts.leftArm) return; // Chỉ áp dụng animation khi xài procedural model
+
+            if (isMoving && isGrounded) {
+                animTime += delta * 12;
+                // Swing arms & legs while walking
+                playerBodyParts.leftArm.rotation.x  = Math.sin(animTime) * 0.7;
+                playerBodyParts.rightArm.rotation.x = -Math.sin(animTime) * 0.7;
+                playerBodyParts.leftLeg.rotation.x  = -Math.sin(animTime) * 0.7;
+                playerBodyParts.rightLeg.rotation.x = Math.sin(animTime) * 0.7;
+            } else if (!isGrounded) {
+                // Jump Pose: giơ tay lên
+                playerBodyParts.leftArm.rotation.x  = THREE.MathUtils.lerp(playerBodyParts.leftArm.rotation.x, -2.5, 0.1);
+                playerBodyParts.rightArm.rotation.x = THREE.MathUtils.lerp(playerBodyParts.rightArm.rotation.x, -2.5, 0.1);
+                playerBodyParts.leftLeg.rotation.x  = THREE.MathUtils.lerp(playerBodyParts.leftLeg.rotation.x, 0.3, 0.1);
+                playerBodyParts.rightLeg.rotation.x = THREE.MathUtils.lerp(playerBodyParts.rightLeg.rotation.x, -0.3, 0.1);
+            } else {
+                // Idle Pose: đưa cơ thể về trạng thái đứng yên mượt mà
+                playerBodyParts.leftArm.rotation.x  = THREE.MathUtils.lerp(playerBodyParts.leftArm.rotation.x, 0, 0.15);
+                playerBodyParts.rightArm.rotation.x = THREE.MathUtils.lerp(playerBodyParts.rightArm.rotation.x, 0, 0.15);
+                playerBodyParts.leftLeg.rotation.x  = THREE.MathUtils.lerp(playerBodyParts.leftLeg.rotation.x, 0, 0.15);
+                playerBodyParts.rightLeg.rotation.x = THREE.MathUtils.lerp(playerBodyParts.rightLeg.rotation.x, 0, 0.15);
             }
         }
-        jumpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); triggerJump(); });
-        jumpBtn.addEventListener('mousedown', triggerJump);
 
-        // --- 6. GAME LOOP ---
-        const clock = new THREE.Clock();
-        const moveSpeed = 10;
+        // ==========================================
+        // 8. MAIN GAME LOOP
+        // ==========================================
+        let frameCount = 0;
+        let lastFpsUpdate = 0;
 
         function animate() {
             requestAnimationFrame(animate);
-            const delta = clock.getDelta();
 
-            // 1. Xử lý Trọng lực & Nhảy
-            player.position.y += velocityY * delta;
+            const delta = Math.min(clock.getDelta(), 0.1); // Tránh delta quá lớn khi giật lag
+            
+            // FPS Performance Tracking
+            frameCount++;
+            if (clock.getElapsedTime() - lastFpsUpdate >= 1.0) {
+                fpsCounter.textContent = frameCount;
+                frameCount = 0;
+                lastFpsUpdate = clock.getElapsedTime();
+            }
+
+            // --------------------------------------
+            // A. TRỌNG LỰC & XỬ LÝ CHÂN SÀN (GROUND COLLISION)
+            // --------------------------------------
+            playerGroup.position.y += velocityY * delta;
+
             if (!isGrounded) {
                 velocityY += gravity * delta;
             }
-            if (player.position.y <= 0) {
-                player.position.y = 0;
+
+            // Đáy chân luôn nằm chuẩn trên mặt đất (Y = 0)
+            if (playerGroup.position.y <= 0) {
+                playerGroup.position.y = 0;
                 velocityY = 0;
                 isGrounded = true;
             }
 
-            // 2. Xử lý Di chuyển (Vừa đi vừa nhảy)
-            if (moveData.x !== 0 || moveData.y !== 0) {
-                // Tính hướng di chuyển dựa trên góc xoay của Camera
-                const moveAngle = Math.atan2(moveData.x, moveData.y);
-                const totalAngle = cameraAngleX + moveAngle;
+            // --------------------------------------
+            // B. DI CHUYỂN NHÂN VẬT HƯỚNG THEO CAMERA
+            // --------------------------------------
+            if (joystickVector.x !== 0 || joystickVector.y !== 0) {
+                // Tính góc di chuyển dựa theo góc Camera hiện tại
+                const moveAngle = Math.atan2(joystickVector.x, joystickVector.y);
+                const totalAngle = cameraCurrentAngleX + moveAngle;
 
                 const moveX = Math.sin(totalAngle) * moveSpeed * delta;
                 const moveZ = Math.cos(totalAngle) * moveSpeed * delta;
 
-                player.position.x += moveX;
-                player.position.z += moveZ;
+                playerGroup.position.x += moveX;
+                playerGroup.position.z += moveZ;
 
-                // Xoay nhân vật theo hướng đang di chuyển
-                player.rotation.y = totalAngle;
+                // Xoay nhân vật quay mặt về hướng di chuyển
+                playerMeshGroup.rotation.y = totalAngle;
             }
 
-            // 3. Cập nhật vị trí Camera theo dõi Nhân vật
-            const camX = player.position.x + cameraDistance * Math.sin(cameraAngleX) * Math.cos(cameraAngleY);
-            const camY = player.position.y + cameraDistance * Math.sin(cameraAngleY) + 2;
-            const camZ = player.position.z + cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
+            // Cập nhật vị trí hiển thị lên HUD
+            posCounter.textContent = `X: ${playerGroup.position.x.toFixed(1)}, Z: ${playerGroup.position.z.toFixed(1)}`;
+
+            // --------------------------------------
+            // C. LÀM MƯỢT XOAY CAMERA BẰNG LERP DAMPING
+            // --------------------------------------
+            // Công thức LERP: Current = Current + (Target - Current) * Damping
+            cameraCurrentAngleX += (cameraTargetAngleX - cameraCurrentAngleX) * cameraDamping;
+            cameraCurrentAngleY += (cameraTargetAngleY - cameraCurrentAngleY) * cameraDamping;
+
+            // Tính toán vị trí Camera dựa vào tọa độ cầu (Spherical Coordinates)
+            const camX = playerGroup.position.x + cameraDistance * Math.sin(cameraCurrentAngleX) * Math.cos(cameraCurrentAngleY);
+            const camY = playerGroup.position.y + cameraDistance * Math.sin(cameraCurrentAngleY) + 2.5;
+            const camZ = playerGroup.position.z + cameraDistance * Math.cos(cameraCurrentAngleX) * Math.cos(cameraCurrentAngleY);
 
             camera.position.set(camX, camY, camZ);
-            camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
+            // Camera luôn nhìn vào tâm ngực nhân vật
+            camera.lookAt(playerGroup.position.x, playerGroup.position.y + 2.8, playerGroup.position.z);
+
+            // --------------------------------------
+            // D. CẬP NHẬT ANIMATION & RENDER SCENE
+            // --------------------------------------
+            updatePlayerAnimation(delta);
 
             renderer.render(scene, camera);
         }
 
-        animate();
-
-        // Xử lý Resize Màn hình
-        window.addEventListener('resize', () => {
+        // ==========================================
+        // 9. WINDOW RESIZE HANDLER
+        // ==========================================
+        function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Khởi chạy Game khi trang load xong
+        window.addEventListener('DOMContentLoaded', initEngine);
+        window.addEventListener('load', () => {
+            animate();
         });
     </script>
 </body>
